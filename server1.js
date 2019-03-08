@@ -1,7 +1,7 @@
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser'); //body-parser is a middleware
-var _ = require('underscore');
+
 
 var PORT = process.env.PORT || 3000;
 var todos = [];
@@ -21,7 +21,13 @@ app.get('/todos', function(req, res) {
 //GET /todos/:id
 app.get('/todos/:id', function(req, res) {
     var todoId = parseInt(req.params.id, 10); //Important, data type must match
-    var matchedTodo = _.findWhere(todos, {id: todoId}); //Underscore
+    var matchedTodo;
+    
+    todos.forEach(function(todo) {
+        if(todoId === todo.id){
+            matchedTodo = todo;
+        }
+    });
 
     if(!matchedTodo){ //If not found
         res.status(404).send();
@@ -32,18 +38,11 @@ app.get('/todos/:id', function(req, res) {
 
 // //POST
 app.post('/todos', function(req, res) {
-    var body = _.pick(req.body, 'description', 'completed');
-
-    if(!_.isBoolean(body.completed) 
-        || !_.isString(body.description) 
-        || body.description.trim().length === 0) { //  body.description.trim().length avoids strings with only spaces
-        return res.status(400).send();
-    }
-
-    body.description = body.description.trim();
+    var body = req.body;
 
     //Add id field
-    body.id = todoNextId++;
+    body.id = todoNextId;
+    todoNextId++;
 
     //Push to array
     todos.push(body);

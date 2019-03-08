@@ -37,7 +37,7 @@ app.post('/todos', function(req, res) {
     if(!_.isBoolean(body.completed) 
         || !_.isString(body.description) 
         || body.description.trim().length === 0) { //  body.description.trim().length avoids strings with only spaces
-        return res.status(404).send();
+        return res.status(400).send();
     }
 
     body.description = body.description.trim();
@@ -63,6 +63,37 @@ app.delete('/todos/:id', function(req, res) {
         todos = _.without(todos, matchedTodo);
         res.json(matchedTodo);
     }
+});
+
+//PUT
+app.put('/todos/:id', function(req, res) {
+    var body = _.pick(req.body, 'description', 'completed');
+    var validAttributes = {}
+    var todoId = parseInt(req.params.id, 10);
+    var matchedTodo = _.findWhere(todos, {id: todoId});
+
+    //Validation
+    if(!matchedTodo){ //If not found
+        return res.status(404).json({"error": "No todo found with that id"});
+    }
+    
+    if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+        validAttributes.completed = body.completed;
+    }else if(body.hasOwnProperty('completed')) {
+        //Bad
+        return res.status(400).send();
+    }
+
+    if(body.hasOwnProperty('description') && body.description.trim().length > 0 && _.isString(body.description)) {
+        validAttributes.description = body.description
+    }else if(body.hasOwnProperty('description')) {
+        //Bad
+        return res.status(400).send();
+    }
+    //End of validation
+
+    _.extend(matchedTodo, validAttributes);
+    res.json(matchedTodo);
 });
 
 

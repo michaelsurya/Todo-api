@@ -30,14 +30,14 @@ app.get('/todos/:id', function(req, res) {
     }
 });
 
-// //POST
+//POST
 app.post('/todos', function(req, res) {
     var body = _.pick(req.body, 'description', 'completed');
 
     if(!_.isBoolean(body.completed) 
         || !_.isString(body.description) 
         || body.description.trim().length === 0) { //  body.description.trim().length avoids strings with only spaces
-        return res.status(400).send();
+        return res.status(404).send();
     }
 
     body.description = body.description.trim();
@@ -50,6 +50,21 @@ app.post('/todos', function(req, res) {
 
     res.json(body);
 });
+
+//DELETE
+app.delete('/todos/:id', function(req, res) {
+    var todoId = parseInt(req.params.id, 10);
+    var matchedTodo = _.findWhere(todos, {id: todoId});
+
+    
+    if(!matchedTodo){ //If not found
+        res.status(404).json({"error": "No todo found with that id"});
+    }else{
+        todos = _.without(todos, matchedTodo);
+        res.json(matchedTodo);
+    }
+});
+
 
 app.listen(PORT, function() {
     console.log('Express is listening on port: ' + PORT);

@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser'); //body-parser is a middleware
 var _ = require('underscore');
+var db = require('./db.js');
 
 var PORT = process.env.PORT || 3000;
 var todos = [];
@@ -49,21 +50,11 @@ app.get('/todos/:id', function(req, res) {
 app.post('/todos', function(req, res) {
     var body = _.pick(req.body, 'description', 'completed');
 
-    if(!_.isBoolean(body.completed) 
-        || !_.isString(body.description) 
-        || body.description.trim().length === 0) { //  body.description.trim().length avoids strings with only spaces
-        return res.status(400).send();
-    }
-
-    body.description = body.description.trim();
-
-    //Add id field
-    body.id = todoNextId++;
-
-    //Push to array
-    todos.push(body);
-
-    res.json(body);
+    db.todo.create(body).then(function(todo) {
+        res.json(todo.toJSON());
+    }, function(e) {
+        res.status(400).json(e);
+    })
 });
 
 //DELETE
@@ -111,7 +102,9 @@ app.put('/todos/:id', function(req, res) {
     res.json(matchedTodo);
 });
 
-
-app.listen(PORT, function() {
-    console.log('Express is listening on port: ' + PORT);
+//Sync the database
+db.sequelize.sync().then(function() {
+    app.listen(PORT, function() {
+        console.log('Express is listening on port: ' + PORT);
+    });
 });

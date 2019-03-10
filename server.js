@@ -89,32 +89,31 @@ app.delete('/todos/:id', function(req, res) {
 //PUT
 app.put('/todos/:id', function(req, res) {
     var body = _.pick(req.body, 'description', 'completed');
-    var validAttributes = {}
+    var Attributes = {}
     var todoId = parseInt(req.params.id, 10);
-    var matchedTodo = _.findWhere(todos, {id: todoId});
 
-    //Validation
-    if(!matchedTodo){ //If not found
-        return res.status(404).json({"error": "No todo found with that id"});
-    }
-    
-    if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-        validAttributes.completed = body.completed;
-    }else if(body.hasOwnProperty('completed')) {
-        //Bad
-        return res.status(400).send();
+    if(body.hasOwnProperty('completed')) {
+        Attributes.completed = body.completed;
     }
 
-    if(body.hasOwnProperty('description') && body.description.trim().length > 0 && _.isString(body.description)) {
-        validAttributes.description = body.description
-    }else if(body.hasOwnProperty('description')) {
-        //Bad
-        return res.status(400).send();
+    if(body.hasOwnProperty('description')) {
+        Attributes.description = body.description
     }
-    //End of validation
 
-    _.extend(matchedTodo, validAttributes);
-    res.json(matchedTodo);
+    db.todo.findById(todoId).then(function(todo) {
+        if(todo) {
+            return todo.update(Attributes);
+        }else {
+            res.status(404).send();
+        }
+    }, function() {
+        res.status(500).send();
+    }).then(function(todo) {
+        res.json(todo.toJSON());
+    }, function(e) {
+        res.status(400).json(e);
+    });
+
 });
 
 //Sync the database

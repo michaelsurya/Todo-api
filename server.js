@@ -102,18 +102,29 @@ app.put('/todos/:id', function(req, res) {
 
     db.todo.findById(todoId).then(function(todo) {
         if(todo) {
-            return todo.update(Attributes);
+            todo.update(Attributes).then(function(todo) {
+                res.json(todo.toJSON());
+            }, function(e) {
+                res.status(400).json(e);
+            });
         }else {
             res.status(404).send();
         }
     }, function() {
         res.status(500).send();
-    }).then(function(todo) {
-        res.json(todo.toJSON());
+    })
+
+});
+
+//POST/users
+app.post('/users', function(req, res) {
+    var body = _.pick(req.body, 'email', 'password');
+
+    db.user.create(body).then(function(user) {
+        res.json(user.toJSON());
     }, function(e) {
         res.status(400).json(e);
-    });
-
+    })
 });
 
 //Sync the database

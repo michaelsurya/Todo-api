@@ -16,5 +16,13 @@ module.exports = function (sequlize, DataTypes) {
                 
             }
         }
+    }, {
+        hooks: {
+            beforeValidate: (user, options) => {
+                if(typeof user.email === 'string'){
+                    user.email = user.email.toLowerCase()
+                }
+            }
+        }
     })
 }

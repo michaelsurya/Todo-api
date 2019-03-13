@@ -1,3 +1,6 @@
+var bcrypt = require('bcrypt');
+var _ = require('underscore');
+
 module.exports = function (sequlize, DataTypes) {
     return sequlize.define('user', {
         email: {
@@ -8,13 +11,29 @@ module.exports = function (sequlize, DataTypes) {
                 isEmail: true
             }
         },
+        salt: {
+            type: DataTypes.STRING
+        },
+        password_hash: {
+            type: DataTypes.STRING
+        },
         password: {
-            type: DataTypes.STRING,
+            type: DataTypes.VIRTUAL,
             allowNull: false,
             validate: {
                 len: [7, 25]
                 
+            },
+            //START OF HASHING
+            set: function (value) {
+                var salt = bcrypt.genSaltSync(10);
+                var hashedPasword = bcrypt.hashSync(value, salt);
+
+                this.setDataValue('password', value);
+                this.setDataValue('salt', salt);
+                this.setDataValue('password_hash', hashedPasword);
             }
+            //END OF HASHING
         }
     }, {
         hooks: {
@@ -22,6 +41,13 @@ module.exports = function (sequlize, DataTypes) {
                 if(typeof user.email === 'string'){
                     user.email = user.email.toLowerCase()
                 }
+            }
+        },
+        //NOT RETURNING PASSWORD AS RESPONSE
+        instanceMethods: {
+            toPublicJSON: function () {
+                var json = this.toJSON();
+                return _.pick(this, 'id', 'email', 'createdAt', 'updatedAt')
             }
         }
     })

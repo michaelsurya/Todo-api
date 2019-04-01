@@ -166,7 +166,7 @@ app.post('/users/login', function(req, res) {
 
 
 //Sync the database
-db.sequelize.sync().then(function() {
+db.sequelize.sync({force: true}).then(function() {
     app.listen(PORT, function() {
         console.log('Express is listening on port: ' + PORT);
     });
